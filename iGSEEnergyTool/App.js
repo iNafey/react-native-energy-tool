@@ -21,7 +21,7 @@ import {
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, Layout } from '@ui-kitten/components';
 
-import { color } from 'react-native-reanimated';
+import 'react-native-reanimated';
 
 
 const App = () => {
@@ -45,7 +45,7 @@ const App = () => {
 const styles = StyleSheet.create({
   root: {
     flex:  1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F4F4F4',
   }
 });
 

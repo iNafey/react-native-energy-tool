@@ -11,7 +11,12 @@ The inspiration behind this app is for the following reasons:
 
 ### App functionalities (up to this point):
 
+* All the features below only work on android devices (iOS not setup).
 * Working login and registration with validation (using react form hooks).
+* Working vision camera and QR/Barcode scanner (with a focus box).
 * Firebase user authentication.
+* Admin and Customer profiles (authorization) is setup. Which includes different screens for admin as compared to a regular user.
+* Bottom tab navigator implemented.
+* Loading screen (Activity Indicator) setup to display during firebase transactions.
 
  

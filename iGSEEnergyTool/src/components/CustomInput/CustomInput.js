@@ -2,7 +2,7 @@ import React from 'react';
 import {View, Text, TextInput, StyleSheet} from 'react-native';
 import { Controller } from 'react-hook-form';
 
-const CustomInput = ({control, name, rules={}, placeholder, secureTextEntry}) => {
+const CustomInput = ({control, name, rules={}, placeholder, secureTextEntry, defaultValue}) => {
   return (   
     <Controller 
       control={control}
@@ -18,6 +18,7 @@ const CustomInput = ({control, name, rules={}, placeholder, secureTextEntry}) =>
               placeholder={placeholder}
               style={[styles.input, {}]}
               secureTextEntry={secureTextEntry}
+              defaultValue={defaultValue}
               
             />
           </View>
