@@ -33,7 +33,8 @@ The inspiration behind this app is for the following reasons:
 - If you want to run on an iOS emulator, make sure you have Xcode installed. In the iGSE folder, copy and run the command ```npm i && cd ios && pod install && cd .. && npx react-native run-ios```
 - For a physical iOS device, install Xcode and go to this page "https://reactnative.dev/docs/environment-setup", choose "React Native CLI Quickstart" option, choose Development OS: macOS and Target OS: iOS. Follow "Installing dependencies" section but don't install iOS simulator (you just need node, watchman and ruby). Scroll down to find "Running on device" sub-section and follow the link and complete the given steps. Once you finish that you can go into iGSE folder and run the command ```npm i && cd ios && pod install && cd .. && npx react-native run-ios```
 
-## Instructions for the Rest API (removed secret keys so database inaccesible but these steps are to be followed in an ideal environment)
+## Instructions for the Rest API
+### IMPORTANT: (removed secret keys so database inaccesible but these steps are to be followed in an ideal environment)
 1. Install node and npm
 2. Open a terminal and navigate to igseRestAPI folder and run the command ```npm i && npm start```
 3. Use a Postman Client or any other API client to send https requests to the Nodemon server.
