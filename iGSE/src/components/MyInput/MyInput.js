@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet, Platform } from 'react-native';
 import { Controller } from 'react-hook-form';
 
-const CustomInput = ({ control, name, rules = {}, placeholder, secureTextEntry }) => {
+const MyInput = ({ control, name, rules = {}, placeholder, secureTextEntry }) => {
   return (
     <Controller
       control={control}
@@ -45,4 +45,4 @@ const styles = StyleSheet.create({
   input: {},
 });
 
-export default CustomInput;
+export default MyInput;

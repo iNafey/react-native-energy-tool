@@ -1,58 +1,81 @@
 import { View, Text, Image, StyleSheet, useWindowDimensions, ScrollView, ActivityIndicator, SafeAreaView, Alert } from 'react-native'
-import React, {useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import Logo from '../../../assets/images/logo.png'
 import CustomInput from '../../components/CustomInput'
 import CustomButton from '../../components/CustomButton'
+import MyInput from '../../components/MyInput'
 import { useNavigation } from '@react-navigation/native'
-import {useForm} from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { firebase } from '../../../firebase/firebase_config'
 import { sha256 } from 'react-native-sha256';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let encryptedPassword = "";
 
 const Login = () => {
-  //const [username, setUsername] = useState('');
-  //const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [invalidDetails, setInvalidDetails] = useState(false);
-
-  const {height} = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const navigation = useNavigation();
 
-  const {control, handleSubmit, formState: {errors}} = useForm();
 
-  function sleep(time){
-    return new Promise((resolve)=>setTimeout(resolve,time)
-  )
+  const { register, setValue, control, handleSubmit, formState: { errors } } = useForm();
+
+  //Fetch last used email from async storage/shared preferences
+  useEffect(() => {
+    (async () => {
+      try {
+        const value = await AsyncStorage.getItem('lastUserEmail')
+
+        if (value !== null) {
+          // value previously stored
+          setValue("email", value);
+        }
+
+        //When app restarts, no last user email is stored.
+        //IMP: IF YOU WANT THE APP TO REMEMBER LAST USER EVEN AT RESTART THEN DELETE LINE BELOW.
+        await AsyncStorage.setItem('lastUserEmail', '');
+      } catch (e) {
+        // error reading value
+      }
+    })();
+  }, []);
+
+  //Timeout function for consistent state changes
+  function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time)
+    )
   }
-  
-  const onHashPassword = (data)  => {
+
+  //SHA-256 hash encryption
+  const onHashPassword = (data) => {
     setInvalidDetails(false);
     setLoading(true);
-    
+
     sha256(data.password).then((hash) => {
-      encryptedPassword=hash;      
+      encryptedPassword = hash;
       //console.log(pwd);    
     });
 
-    sleep(1000).then(()=>{
+    sleep(1000).then(() => {
       onLoginPressed(data);
-   })
-    
+    })
+
   }
 
+  //Server-side validation
   onLoginPressed = async (data) => {
     try {
       //console.log(data.email, data.password);
       await firebase.auth().signInWithEmailAndPassword(data.email, encryptedPassword)
-      .catch(error => {
-        switch(error.code) {
-          case 'auth/user-not-found':
-            setInvalidDetails(true);
-          case 'auth/wrong-password':
-            setInvalidDetails(true);
-        }
-      })
+        .catch(error => {
+          switch (error.code) {
+            case 'auth/user-not-found':
+              setInvalidDetails(true);
+            case 'auth/wrong-password':
+              setInvalidDetails(true);
+          }
+        })
       console.log(data.email, encryptedPassword);
     } catch (error) {
       alert(error.message);
@@ -62,15 +85,17 @@ const Login = () => {
     //navigation.navigate('Home');
   };
 
+  //Navigate to registration form
   const onSignUpPressed = () => {
     console.log("Go to Sign Up!")
     navigation.navigate('SignUp');
   }
-  
+
+  //Loading animation component during input processing and fetch user data from DB
   function LoadingAnimation() {
     return (
       <View style={styles.root}>
-        <ActivityIndicator size="large" style={styles.indicator}/>
+        <ActivityIndicator size="large" style={styles.indicator} />
         <Text style={styles.indicatorText}>Signing in...</Text>
       </View>
     );
@@ -78,57 +103,56 @@ const Login = () => {
 
   return (
     <SafeAreaView>
-    <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
-    {        
-        loading ?
-        <LoadingAnimation /> :
-        <View style={styles.root}>
-        <Image 
-        source={Logo} 
-        style={[styles.logo, {height: height * 0.3}]} 
-        resizeMode="contain" 
-        />
+        {
+          loading ?
+            <LoadingAnimation /> :
+            <View style={styles.root}>
+              <Image
+                source={Logo}
+                style={[styles.logo, { height: height * 0.3 }]}
+                resizeMode="contain"
+              />
 
-        
-        
-        <CustomInput 
-        name="email"
-        rules={{
-          required: 'Email is required.'
-        }}
-        placeholder="Email" 
-        control={control}
-        />
-        <CustomInput
-        name="password"
-        rules={{
-          required: 'Password is required.', 
-          minLength: {value: 5, message: 'Password should have 5 or more characters.'}}} 
-        placeholder="Password" 
-        control={control}
-        secureTextEntry={true}
-        />
-        
+              <MyInput
+                name="email"
+                rules={{
+                  required: 'Email is required.'
+                }}
+                placeholder="Email"
+                control={control}
+              />
+              <MyInput
+                name="password"
+                rules={{
+                  required: 'Password is required.',
+                  minLength: { value: 5, message: 'Password should have 5 or more characters.' }
+                }}
+                placeholder="Password"
+                control={control}
+                secureTextEntry={true}
+              />
 
-        <CustomButton 
-        text="LOGIN" 
-        onPress={handleSubmit(onHashPassword)}
-        type='PRIMARY'
-        />
 
-        { invalidDetails ? (
-          <Text style={{color: "red"}}>Invalid email or password</Text>
-        ) : null }
+              <CustomButton
+                text="LOGIN"
+                onPress={handleSubmit(onHashPassword)}
+                type='PRIMARY'
+              />
 
-        <CustomButton 
-        text="Don't have an account? Sign Up" 
-        onPress={onSignUpPressed} 
-        type='TERTIARY' 
-        />
-      </View>}
-      
-    </ScrollView>
+              {invalidDetails ? (
+                <Text style={{ color: "red" }}>Invalid email or password</Text>
+              ) : null}
+
+              <CustomButton
+                text="Don't have an account? Sign Up"
+                onPress={onSignUpPressed}
+                type='TERTIARY'
+              />
+            </View>}
+
+      </ScrollView>
     </SafeAreaView>
   )
 }

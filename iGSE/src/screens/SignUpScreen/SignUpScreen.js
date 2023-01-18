@@ -1,15 +1,20 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import CustomInput from '../../components/CustomInput';
+import MyInput from '../../components/MyInput';
 import CustomButton from '../../components/CustomButton';
 import { IndexPath, Select, SelectItem } from '@ui-kitten/components';
-import {useNavigation, useRoute} from '@react-navigation/core';
+import { useNavigation, useRoute } from '@react-navigation/core';
 import { useForm, Controller } from 'react-hook-form';
 import { firebase } from '../../../firebase/firebase_config';
 import { sha256 } from 'react-native-sha256';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+//Regexes for validation
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
 const QR_CODE_REGEX = /^[A-Z0-9]*$/;
+
+
 const property_types = ['Detached', 'Semi-detached', 'Terraced', 'Flat', 'Cottage', 'Bungalow', 'Mansion'];
 let pwd = "";
 
@@ -18,77 +23,42 @@ const SignUpScreen = () => {
   const [loading, setLoading] = useState(false);
   const [invalidEvc, setInvalidEvc] = useState(false);
   const [emailTaken, setEmailTaken] = useState(false);
-  
 
-  const [selectedIndex, setSelectedIndex] = React.useState(new IndexPath(2));
-  //const [showCodeMessage] = React.useState(false);
-  this.state = {showCodeMessage:false};
-  
   const navigation = useNavigation();
 
   const route = useRoute();
 
-  //const {qrcode_string} = route.params.paramKey || null;
-
-  const {control, handleSubmit, formState: {errors}, watch} = useForm({mode: 'onBlur'});
+  const { control, register, setValue, handleSubmit, formState: { errors }, watch } = useForm({ mode: 'onBlur' });
   const watch_password = watch('password');
 
+  //Get QR code value from camera scanner if there is any
   useEffect(() => {
     //console.log(route.params?.paramKey);
     if (route.params?.paramKey) {
       console.log("Sent successfully");
+      setValue("evc", route.params?.paramKey);
     }
   }, [route.params?.paramKey]);
 
-
-  const onScanVoucherPressed = () => {
-    navigation.navigate('ScanVoucher', {
-      prevScreen: 'SignUp',
-    });
-  }
-
-  async function checkEvcExists(inputEvc) {
+  //Navigate to camera scanner and update async storage/shared preferences
+  const onScanVoucherPressed = async () => {
     try {
-      console.log("CHECK USER ENTERED!" + inputEvc);
-      var dupeFound = false;
-
-      await firebase.firestore().collection('users')
-        .onSnapshot(
-          querySnapshot => {
-            const users = [];
-            querySnapshot.forEach((doc) => {
-              const { evc } = doc.data();
-              //console.log(inputEvc + " " + evc);
-              if (evc === inputEvc) {
-                //console.log("Evc exists!"); 
-                dupeFound=true;
-              }
-            });
-          }
-        )
-      
-      
-      await sleep(2000).then(()=>{
-        //console.log(dupeFound);
-        if (dupeFound) {
-          console.log("returning dupe evc true")
-          return true;
-        } else {
-          console.log("returning dupe evc false")
-          return false;
-        }
-     })} catch (error) {
-      alert(error.message);
-     }
-    
+      await AsyncStorage.setItem('navigatedFrom', "SignUp");
+      navigation.navigate('ScanVoucher');
+    } catch (e) {
+      // saving error
+      Alert.alert(e);
+    }
   }
 
-  function sleep(time){
-    return new Promise((resolve)=>setTimeout(resolve,time)
-  )
+  //Timeout function to ensure stable and consistent state changes
+  function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time)
+    )
   }
 
-  const encryptPassword = async (data)  => {
+  //Check if evc is already used and also encrypt the password.
+  const encryptPassword = async (data) => {
 
     setLoading(true);
     setEmailTaken(false);
@@ -98,52 +68,51 @@ const SignUpScreen = () => {
 
     var dupeFound = false;
 
-      await firebase.firestore().collection('users')
-        .onSnapshot(
-          querySnapshot => {
-            const users = [];
-            querySnapshot.forEach((doc) => {
-              const { evc } = doc.data();
-              //console.log(data.evc + " " + evc);
-              if (evc === data.evc) {
-                //console.log("Evc exists!"); 
-                dupeFound=true;
-                
-              }
-            });
-          }
-        )
-      
-      
-      await sleep(2000).then(()=>{
-        //console.log(dupeFound);
-        if (dupeFound) {
-          console.log("returning dupe evc true")
-          //return true;
-          setLoading(false);
-          setInvalidEvc(true);
+    await firebase.firestore().collection('users')
+      .onSnapshot(
+        querySnapshot => {
+          const users = [];
+          querySnapshot.forEach((doc) => {
+            const { evc } = doc.data();
+            //console.log(data.evc + " " + evc);
+            if (evc === data.evc) {
+              //console.log("Evc exists!"); 
+              dupeFound = true;
 
-        } else {
-          console.log("returning dupe evc false")
-          //return false;
-
-          sha256(data.password).then((hash) => {
-            pwd=hash;      
-            //console.log(pwd);    
+            }
           });
-      
-          sleep(1000).then(()=>{
-            onSignUpPressed(data);
-         })
-
-         //setLoading(false);
         }
-      });  
+      )
+
+    //Wait 2 sec
+    await sleep(2000).then(() => {
+      //console.log(dupeFound);
+      if (dupeFound) {
+        console.log("returning dupe evc true")
+        //return true;
+        setLoading(false);
+        setInvalidEvc(true);
+
+      } else {
+        console.log("returning dupe evc false")
+        //return false;
+
+        sha256(data.password).then((hash) => {
+          pwd = hash;
+          //console.log(pwd);    
+        });
+
+        //Allow 1 sec for changes to be reflected across the app.
+        sleep(1000).then(() => {
+          onSignUpPressed(data);
+        })
+      }
+    });
   }
 
-
+  //Handling semi-validated user's inputs
   const onSignUpPressed = async (data) => {
-    console.log(data);
+    //console.log(data);
     const email = data.email;
     const userName = data.username;
     const address = data.address;
@@ -157,61 +126,64 @@ const SignUpScreen = () => {
     const listOfReadings = []
 
     //Validate and update Firebase DB
-      await firebase.auth().createUserWithEmailAndPassword(data.email, pwd)
-        .then(() => {
+    await firebase.auth().createUserWithEmailAndPassword(data.email, pwd)
+      .then(() => {
         firebase.firestore().collection('users')
-        .doc(firebase.auth().currentUser.uid)
-        .set({
-          email,
-          pwd,
-          userName,
-          address,
-          propertyType,
-          noOfBedrooms,
-          evc,
-          credit,
-          listOfEvcs,
-          listOfBills,
-          listOfReadings
-        })
-        .catch(error => {
-          switch(error.code) {
-            case 'auth/email-already-in-use':
-              setEmailTaken(true);
-          }
-        })
+          .doc(firebase.auth().currentUser.uid)
+          .set({
+            email,
+            pwd,
+            userName,
+            address,
+            propertyType,
+            noOfBedrooms,
+            evc,
+            credit,
+            listOfEvcs,
+            listOfBills,
+            listOfReadings
+          })
+          .catch(error => {
+            switch (error.code) {
+              case 'auth/email-already-in-use':
+                setEmailTaken(true);
+            }
+          })
       }).catch((error) => {
-        if (error.code  == 'auth/email-already-in-use') {setEmailTaken(true)}
-        else {alert(error.message);}
-        
+        if (error.code == 'auth/email-already-in-use') { setEmailTaken(true) }
+        else { alert(error.message); }
+
       })
-      
+
     setLoading(false);
   };
 
-
+  //Navigate back to login screen
   const onSignInPress = () => {
     console.log('onSignInPressed');
     navigation.navigate('Login');
 
   };
 
+  //Terms of use pop up
   const onTermsOfUsePressed = () => {
-    Alert.alert("User terms and conditions:", 
-                "Your account details, energy credit, meter readings and bills will be stored on the platform. You will have access to this data. We will not edit any information you provide us. Bills are calculated based on latest prices and will be subject to change."
-                )
-  };
-
-  const onPrivacyPressed = () => {
-    Alert.alert("Privacy policy:",
-                "Your details will be stored securely (private information will be encrypted). Your data maybe used by us to provide a better service but it will not be shared with any 3rd party."
+    Alert.alert("User terms and conditions:",
+      "Your account details, energy credit, meter readings and bills will be stored on the platform. You will have access to this data. We will not edit any information you provide us. Bills are calculated based on latest prices and will be subject to change."
     )
   };
 
+  //Privacy policy pop up
+  const onPrivacyPressed = () => {
+    Alert.alert("Privacy policy:",
+      "Your details will be stored securely (private information will be encrypted). Your data maybe used by us to provide a better service but it will not be shared with any 3rd party."
+    )
+  };
+
+  //Loading animating when processing user inputs and accessing firebase
   function LoadingAnimation() {
     return (
       <View style={styles.indicatorWrapper}>
-        <ActivityIndicator size="large" style={styles.indicator}/>
+        <ActivityIndicator size="large" style={styles.indicator} />
         <Text style={styles.indicatorText}>Setting up your account...</Text>
       </View>
     );
@@ -219,10 +191,10 @@ const SignUpScreen = () => {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      { loading ? <LoadingAnimation /> : <View style={styles.root}>
+      {loading ? <LoadingAnimation /> : <View style={styles.root}>
         <Text style={styles.title}>Create an account</Text>
 
-        <CustomInput
+        <MyInput
           name="username"
           rules={{
             required: 'Username is required.',
@@ -234,13 +206,13 @@ const SignUpScreen = () => {
               value: 20,
               message: 'Username must contain at max 20 characters.'
             },
-            
+
           }}
           placeholder="Username"
           control={control}
         />
 
-        <CustomInput 
+        <MyInput
           name="email"
           rules={{
             required: 'Email is required.',
@@ -248,13 +220,13 @@ const SignUpScreen = () => {
               value: EMAIL_REGEX,
               message: 'Invalid email.'
             },
-            
+
           }}
-          placeholder="Email" 
+          placeholder="Email"
           control={control}
         />
 
-        <CustomInput 
+        <MyInput
           name="password"
           rules={{
             required: 'Password is required.',
@@ -267,71 +239,71 @@ const SignUpScreen = () => {
               message: 'Password must contain at max 24 characters.'
             }
           }}
-          placeholder="Password" 
+          placeholder="Password"
           control={control}
           secureTextEntry
         />
 
-        <CustomInput 
+        <MyInput
           name="confirm_password"
           rules={{
             required: 'Re-enter the password.',
             validate: value =>
               value === watch_password || 'Passwords do not match.',
           }}
-          placeholder="Confirm Password" 
+          placeholder="Confirm Password"
           control={control}
           secureTextEntry
         />
 
-        <CustomInput 
+        <MyInput
           name="address"
           rules={{
             required: 'Address is required.'
           }}
-          placeholder="Address line 1 (and 2 if applicable)" 
+          placeholder="Address line 1 (and 2 if applicable)"
           control={control}
         />
 
         <Text style={{
-          color: 'black', 
-          alignSelf: 'stretch', 
-          fontWeight: 'bold', 
+          color: 'black',
+          alignSelf: 'stretch',
+          fontWeight: 'bold',
           marginVertical: 15
-          }
-          }>Type of property <Text style={{color: 'red'}}>(Required)</Text>
+        }
+        }>Type of property <Text style={{ color: 'red' }}>(Required)</Text>
         </Text>
 
         <Controller
-            name="property_type"
-            control={control}
-            rules={{
-              required: 'You must choose a property type.',
-            }}
-            render={({ field: { onChange, value } }) => {
-              //console.log(value)
-              return (
-                <Select
-                  style={styles.dropdown}
-                  placeholder={'Choose a property type'}
-                  accessibilityLabel="property type"
-                  value={value}
-                  onSelect={(index) => {
-                    onChange(property_types[index.row]);
-                  }}>
-                  {property_types.map((propertyType) => (
-                    <SelectItem
-                      key={`select-option-${propertyType}`}
-                      title={propertyType}
-                    />
-                  ))}
-                </Select>
-              );
-            }}
-          />
-        
-        
-        <CustomInput 
+          name="property_type"
+          control={control}
+          rules={{
+            required: 'You must choose a property type.',
+          }}
+          render={({ field: { onChange, value } }) => {
+            //console.log(value)
+            return (
+              <Select
+                style={styles.dropdown}
+                placeholder={'Choose a property type'}
+                accessibilityLabel="property type"
+                value={value}
+                onSelect={(index) => {
+                  onChange(property_types[index.row]);
+                }}>
+                {property_types.map((propertyType) => (
+                  <SelectItem
+                    key={`select-option-${propertyType}`}
+                    title={propertyType}
+                  />
+                ))}
+              </Select>
+            );
+          }}
+        />
+
+
+        <MyInput
           name="noOfBedrooms"
           rules={{
             required: 'Number of bedrooms is required.',
@@ -341,32 +313,27 @@ const SignUpScreen = () => {
             },
             validate: value => parseInt(value) >= 0 || "Enter a whole number (0,1,2,...)",
           }}
-          placeholder="Number of bedroooms (whole number only)" 
+          placeholder="Number of bedroooms (whole number only)"
           control={control}
         />
-        <Text style={[styles.formtext, {alignItems: 'flex-start', color: '#383d3c'}]}>Energy Voucher Code (EVC)</Text>
+        <Text style={[styles.formtext, { alignItems: 'flex-start', color: '#383d3c' }]}>Energy Voucher Code (EVC)</Text>
 
-        <Text style={{color:"red", marginVertical: 5}}>IMPORTANT: {'\n\n'}- Once EVC is autofilled (after you scan), add a letter and remove it to submit value. {'\n'}- If camera view is black, then restart the app (not just re-open).</Text>
+        <Text style={{ color: "red", marginVertical: 5 }}>IMPORTANT: {'\n\n'}- If camera view is black, then restart the app.</Text>
 
-
-        <CustomButton 
+        <CustomButton
           type='SECONDARY'
-          text="Scan QR Code" 
+          text="Scan QR Code"
           onPress={onScanVoucherPressed}
         />
 
-        
-        {/*<><Text>QR code: <Text style={{ color: '#00b140', fontWeight: 'bold' }}>{route.params?.paramKey}</Text></Text><Text style={{ color: '#00b140' }}>Type this code below</Text><Text style={styles.formtext}>OR enter manually</Text></> */}
-        
-
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-        <View style={{flex: 1, height: 1, backgroundColor: '#78757b'}} />
-        <View>
-          <Text style={{width: 150, textAlign: 'center', fontWeight: 'bold',  color: '#78757b', marginVertical: 25,}}>OR enter manually</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: '#78757b' }} />
+          <View>
+            <Text style={{ width: 150, textAlign: 'center', fontWeight: 'bold', color: '#78757b', marginVertical: 25, }}>OR enter manually</Text>
+          </View>
+          <View style={{ flex: 1, height: 1, backgroundColor: '#78757b' }} />
         </View>
-        <View style={{flex: 1, height: 1, backgroundColor: '#78757b'}} />
-      </View>
-        <CustomInput 
+        <MyInput
           name="evc"
           rules={{
             required: 'EVC is required.',
@@ -378,24 +345,23 @@ const SignUpScreen = () => {
               value: 8,
               message: 'Code must be 8-digits only.'
             },
-            minLength:{
+            minLength: {
               value: 8,
               message: 'Code must be 8-digits only.'
             },
           }}
           placeholder="Enter 8-digit EVC code"
-          defaultValue={route.params?.paramKey} 
           control={control}
         />
 
         <CustomButton
           type='PRIMARY'
-          text="Sign Up" 
+          text="Sign Up"
           onPress={handleSubmit(encryptPassword)
-          } 
+          }
         />
-        { emailTaken ? (<Text style={{color: 'red'}}>Email already in use. Login to your account instead.</Text>) : null }
-        { invalidEvc ? (<Text style={{color: 'red'}}>EVC already used. Try a different code.</Text>) : null }
+        {emailTaken ? (<Text style={{ color: 'red' }}>Email already in use. Login to your account instead.</Text>) : null}
+        {invalidEvc ? (<Text style={{ color: 'red' }}>EVC already used. Try a different code.</Text>) : null}
 
         <Text style={styles.text}>
           By registering, you confirm that you accept our{' '}
@@ -414,7 +380,7 @@ const SignUpScreen = () => {
           type="TERTIARY"
         />
       </View>}
-      
+
     </ScrollView>
   );
 };
@@ -440,7 +406,7 @@ const styles = StyleSheet.create({
   dropdown: {
     marginVertical: 5,
     borderColor: '#e8e8e8',
-    width:"100%",
+    width: "100%",
     backgroundColor: '#FFFFFF',
   },
   formtext: {
@@ -458,13 +424,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   indicator: {
-    marginTop:"50%",
+    marginTop: "50%",
   },
   indicatorText: {
     fontSize: 18,
     marginTop: 12,
   },
-  loadingAnimation:{
+  loadingAnimation: {
     flexDirection: "column",
     flex: 1,
     justifyContent: "center",

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Platform } from 'react-native'
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { firebase } from '../../firebase/firebase_config';
@@ -15,6 +15,7 @@ import RatesScreen from '../screens/RatesScreen';
 import ReadingsScreen from '../screens/ReadingsScreen';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //Screen names
 const homeName = 'Home';
@@ -32,26 +33,39 @@ const Tab = createBottomTabNavigator();
 const Navigation = () => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
-  
+
 
   //Handle user state change
 
-  function onAuthStateChanged(user){
+  function onAuthStateChanged(user) {
     setUser(user);
     if (initializing) setInitializing(false);
+
+    if (user != null) {
+      rememberLoginEmail(user.email);
+    }
+
+  }
+
+  const rememberLoginEmail = async (email) => {
+    try {
+      await AsyncStorage.setItem('lastUserEmail', email);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   useEffect(() => {
-    const subscriber =  firebase.auth().onAuthStateChanged(onAuthStateChanged);
+    const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber;
-  },[]);
+  }, []);
 
   if (initializing) return null;
 
   if (!user) {
     return (
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown:false}}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
           <Stack.Screen name="ScanVoucher" component={ScanVoucherScreen} />
@@ -61,92 +75,81 @@ const Navigation = () => {
   }
 
   if (user.email === "gse@shangrila.gov.un") {
-    return(
+    return (
       <NavigationContainer>
 
         <Tab.Navigator
           initialRouteName={adminDashboardName}
-          screenOptions={({route})  => ({
-            tabBarHideOnKeyboard:true,
-            headerShown:false,
-            tabBarIcon:({focused, color, size}) => {
+          screenOptions={({ route }) => ({
+            tabBarHideOnKeyboard: true,
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => {
               let iconName;
               let rn = route.name;
-    
-              if (rn === adminDashboardName){
+
+              if (rn === adminDashboardName) {
                 iconName = focused ? 'home' : 'home-outline'
-              } else if (rn === setRatesName){
-                  iconName = focused ? 'analytics' : 'analytics-outline'
-              } else if (rn === viewReadingsName){
-                  iconName = focused ? 'speedometer' : 'speedometer-outline'
+              } else if (rn === setRatesName) {
+                iconName = focused ? 'analytics' : 'analytics-outline'
+              } else if (rn === viewReadingsName) {
+                iconName = focused ? 'speedometer' : 'speedometer-outline'
               }
-    
+
               return <Ionicons name={iconName} size={size} color={color}></Ionicons>
             },
-            tabBarLabelStyle: {paddingBottom: 10, fontSize: 10},
-            tabBarStyle: {padding: 10, height: (Platform.OS === "android") ? 70 : 100},
+            tabBarLabelStyle: { paddingBottom: 10, fontSize: 10 },
+            tabBarStyle: { padding: 10, height: (Platform.OS === "android") ? 70 : 100 },
           })}
         >
           <Tab.Screen name={adminDashboardName} component={AdminScreen} />
           <Tab.Screen name={setRatesName} component={RatesScreen} />
           <Tab.Screen name={viewReadingsName} component={ReadingsScreen} />
-          
-        </Tab.Navigator>
 
+        </Tab.Navigator>
       </NavigationContainer>
     );
   }
 
   return (
     <NavigationContainer>
-      {/*
-      <Stack.Navigator screenOptions={{headerShown:false}}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
-      */}
-
       <Tab.Navigator
-      initialRouteName={homeName}
-      screenOptions={({route})  => ({
-        tabBarHideOnKeyboard:true,
-        headerShown:false,
-        tabBarIcon:({focused, color, size}) => {
-          let iconName;
-          let rn = route.name;
+        initialRouteName={homeName}
+        screenOptions={({ route }) => ({
+          tabBarHideOnKeyboard: true,
+          headerShown: false,
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            let rn = route.name;
 
-          if (rn === homeName){
-            iconName = focused ? 'home' : 'home-outline'
-          } else if (rn === uploadReadingName){
+            if (rn === homeName) {
+              iconName = focused ? 'home' : 'home-outline'
+            } else if (rn === uploadReadingName) {
               iconName = focused ? 'speedometer' : 'speedometer-outline'
-          } else if (rn === billName){
+            } else if (rn === billName) {
               iconName = focused ? 'document-text' : 'document-text-outline'
-          }  else if (rn === topUpName){
+            } else if (rn === topUpName) {
               iconName = focused ? 'wallet' : 'wallet-outline'
-          }
+            }
 
-          return <Ionicons name={iconName} size={size} color={color}></Ionicons>
-        },
-        tabBarLabelStyle: {paddingBottom: 10, fontSize: 10},
-        tabBarStyle: {padding: 10, height: (Platform.OS === "android") ? 70 : 100},
-      })}
+            return <Ionicons name={iconName} size={size} color={color}></Ionicons>
+          },
+          tabBarLabelStyle: { paddingBottom: 10, fontSize: 10 },
+          tabBarStyle: { padding: 10, height: (Platform.OS === "android") ? 70 : 100 },
+        })}
       >
 
         <Tab.Screen name={homeName} component={HomeScreen} />
         <Tab.Screen name={uploadReadingName} component={UploadReadingScreen} />
         <Tab.Screen name={billName} component={BillScreen} />
         <Tab.Screen name={topUpName} component={TopUpScreen} />
-        <Tab.Screen 
-          name="ScanVoucher" 
-          component={ScanVoucherScreen} 
+        <Tab.Screen
+          name="ScanVoucher"
+          component={ScanVoucherScreen}
           options={{
             tabBarButton: () => null,
             tabBarVisible: false,
-          }}/>
-
-
+          }} />
       </Tab.Navigator>
-
-      
     </NavigationContainer>
   )
 }

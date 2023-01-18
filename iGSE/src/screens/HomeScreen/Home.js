@@ -6,6 +6,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
+//All tab icons used for easier navigation and better user experience
 const MeterIcon = () => (
   <Ionicons name="speedometer-outline" size={30}></Ionicons>
 );
@@ -19,24 +20,25 @@ const WalletIcon = () => (
 );
 
 
-
 const Home = () => {
   const [user, setUser] = useState('');
 
   const navigation = useNavigation();
 
+  //Get current user data and output a welcome greeting with the user's username. "Hello $username"
   useEffect(() => {
     firebase.firestore().collection('users')
-    .doc(firebase.auth().currentUser.uid).get()
-    .then((snapshot) => {
-      if(snapshot.exists){
-        setUser(snapshot.data())
-      }else {
-        console.log("User does not exist!");
-      }
-    });
-  },[]);
+      .doc(firebase.auth().currentUser.uid).get()
+      .then((snapshot) => {
+        if (snapshot.exists) {
+          setUser(snapshot.data())
+        } else {
+          console.log("User does not exist!");
+        }
+      });
+  }, []);
 
+  //Navigation handling to other screens (bottom tab navigation)
   const goToMeterReadings = () => {
     navigation.navigate('Meter');
   }
@@ -54,47 +56,47 @@ const Home = () => {
     <SafeAreaView style={styles.content}>
       <View style={styles.topRow}>
         <Animated.View
-        entering={FadeInUp.delay(500).duration(1000)}
+          entering={FadeInUp.delay(500).duration(1000)}
         >
           <Text style={styles.welcomeinfo}>
             Hello {user.userName}!
           </Text>
         </Animated.View>
 
-       
+
       </View>
 
       <View style={styles.meterRow}>
         <View style={styles.btnContainer}>
-          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={MeterIcon} onPress={goToMeterReadings}/>
+          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={MeterIcon} onPress={goToMeterReadings} />
         </View>
         <Text style={styles.paraText}> Add meter readings</Text>
       </View>
 
       <View style={styles.billRow}>
         <View style={styles.btnContainer}>
-          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={BillIcon} onPress={goToBills}/>
+          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={BillIcon} onPress={goToBills} />
         </View>
         <Text style={styles.paraText}> Pay outstanding bills</Text>
       </View>
 
       <View style={styles.creditRow}>
         <View style={styles.btnContainer}>
-          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={WalletIcon} onPress={goToCredit}/>
+          <Button style={styles.iconBtn} appearance='outline' status='info' accessoryLeft={WalletIcon} onPress={goToCredit} />
         </View>
         <Text style={styles.paraText}> Top up energy credit</Text>
       </View>
 
-      <View style={[styles.btnContainer, {justifyContent: "center", alignItems: "center", marginTop: 60}]}>
-          <Button 
-            style={styles.button} 
-            status='danger'
-            onPress={() => {firebase.auth().signOut()}}
-            >
-            LOGOUT
-          </Button>
-        </View>
-      
+      <View style={[styles.btnContainer, { justifyContent: "center", alignItems: "center", marginTop: 60 }]}>
+        <Button
+          style={styles.button}
+          status='danger'
+          onPress={() => { firebase.auth().signOut() }}
+        >
+          LOGOUT
+        </Button>
+      </View>
+
 
     </SafeAreaView>
 
@@ -105,7 +107,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   content: {
     margin: 15,
-  }, 
+  },
   welcomeinfo: {
     //margin: 15,
     fontWeight: 'bold',
@@ -162,8 +164,8 @@ const styles = StyleSheet.create({
   },
 
   paraText: {
-    fontSize: 18, 
-    marginTop: 20, 
+    fontSize: 18,
+    marginTop: 20,
     color: '#485450'
   },
 });

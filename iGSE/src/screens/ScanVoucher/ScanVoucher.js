@@ -3,17 +3,18 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useCameraDevices } from 'react-native-vision-camera';
 import { Camera } from 'react-native-vision-camera';
 import { useScanBarcodes, BarcodeFormat } from 'vision-camera-code-scanner';
-import { useNavigation, useRoute } from '@react-navigation/native';
-//import { Svg, Defs, Rect, Mask } from 'react-native-svg';
-
+import { useNavigation } from '@react-navigation/native';
+import { Svg, Defs, Rect, Mask } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ScanVoucher() {
   const [hasPermission, setHasPermission] = React.useState(false);
   const devices = useCameraDevices();
   const device = devices.back;
+
   const [qrcode, setQRCode] = React.useState('');
   const [isScanned, setIsScanned] = React.useState(false);
-  const [previousScreen, setPreviousScreen] = React.useState("");
+
 
   const [frameProcessor, barcodes] = useScanBarcodes([BarcodeFormat.QR_CODE], {
     checkInverted: true,
@@ -21,41 +22,20 @@ export default function ScanVoucher() {
 
   const navigation = useNavigation();
 
-  const route = useRoute();
-
-  // Alternatively you can use the underlying function:
-  //
-  // const frameProcessor = useFrameProcessor((frame) => {
-  //   'worklet';
-  //   const detectedBarcodes = scanBarcodes(frame, [BarcodeFormat.QR_CODE], { checkInverted: true });
-  //   runOnJS(setBarcodes)(detectedBarcodes);
-  // }, []);
-
+  //Call this only once when the component is mounted to request camera permission
   React.useEffect(() => {
     (async () => {
       const status = await Camera.requestCameraPermission();
       setHasPermission(status === 'authorized');
     })();
-
-    if (route.params?.prevScreen) {
-      console.log("Screen name received successfully" + route.params?.prevScreen);
-      setPreviousScreen(route.params?.prevScreen); 
-      console.log("Variable is now set to " + previousScreen);
-    }
   }, []);
 
-  React.useEffect(() => {
-    if (route.params?.prevScreen) {
-      console.log("Screen name received successfully" + route.params?.prevScreen);
-      setPreviousScreen(route.params?.prevScreen); 
-      console.log("Variable is now set to " + previousScreen);
-    }
-  }, [route.params?.prevScreen])
-
+  //Call this whenever the barcodes array value changes
   React.useEffect(() => {
     toggleActiveState();
   }, [barcodes])
 
+  //Function to get the correct barcode value once a code is detected
   const toggleActiveState = async () => {
     if (barcodes && barcodes.length > 0 && isScanned === false) {
       setIsScanned(true);
@@ -64,25 +44,26 @@ export default function ScanVoucher() {
         if (scannedBarcode.rawValue !== "") {
           setQRCode(scannedBarcode.rawValue);
           console.log(scannedBarcode.rawValue);
-          
-          console.log("Variable is now read as " + previousScreen)
-          if (previousScreen == "SignUp") {
-            setPreviousScreen("");
-            navigation.navigate('SignUp', {
-              paramKey: scannedBarcode.rawValue,
-            });
-          } else if (previousScreen == "Credit") {
-            setPreviousScreen("");
-            navigation.navigate('Credit', {
-              paramKey: scannedBarcode.rawValue,
-            });
-          }
-          
-          
-          
-          //navigation.goBack({paramKey: scannedBarcode.rawValue,});
+
+          navigateBack(scannedBarcode.rawValue);
         }
       });
+    }
+  }
+
+  //Navigate to previous screen, either Sign Up or Top up.
+  const navigateBack = async (qrcode) => {
+    try {
+      const value = await AsyncStorage.getItem('navigatedFrom')
+      if (value !== null) {
+        // value previously stored
+        navigation.navigate(value, {
+          paramKey: qrcode,
+        });
+      }
+    } catch (e) {
+      // error reading value
+      alert(e);
     }
   }
 
@@ -90,37 +71,37 @@ export default function ScanVoucher() {
   //Masked camera frame for user to focus the code in the clear box.
   function CameraFrame() {
     return (
-    
+
       <Svg
-        height = "100%"
-        width = "100%">
-          <Defs>
-            <Mask
-              id="mask"
-              x="0"
-              y="0"
-              height="100%"
-              width="100%">
-              <Rect height="100%" width="100%" fill="#fff" />
-            
-              <Rect 
-                x="20%"
-                y="30%"
-                height="250"
-                width="250"
-                fill="black"
-              />
-               
-            </Mask>
-          </Defs>
-        <Rect 
+        height="100%"
+        width="100%">
+        <Defs>
+          <Mask
+            id="mask"
+            x="0"
+            y="0"
+            height="100%"
+            width="100%">
+            <Rect height="100%" width="100%" fill="#fff" />
+
+            <Rect
+              x="20%"
+              y="30%"
+              height="250"
+              width="250"
+              fill="black"
+            />
+
+          </Mask>
+        </Defs>
+        <Rect
           height="100%"
           width="100%"
           fill="rgba(0, 0, 0, 0.6)"
-          mask="url(#mask)" 
+          mask="url(#mask)"
         />
 
-        <Rect 
+        <Rect
           x="20%"
           y="30%"
           height="250"
@@ -132,7 +113,7 @@ export default function ScanVoucher() {
     )
   }
 
-  
+
 
   return (
     device != null &&
@@ -156,12 +137,12 @@ export default function ScanVoucher() {
         </View>
         */}
 
-        <View style={{position: 'absolute', top: 0, bottom: 0, left: 0, right: 0}}>
-          
-          {/* Focus box effect*/}
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+
+          {/* Focus box effect: (If you want this effect make sure to uncomment the line below, camera performance may degrade!)*/}
           {/* <CameraFrame /> */}
 
-          
+
 
           {/* Top label*/}
           <View
@@ -173,7 +154,7 @@ export default function ScanVoucher() {
               alignItems: 'center'
             }}
           >
-            <Text style={{fontSize: 24, fontWeight: "bold", color: "#557bfe", }}>
+            <Text style={{ fontSize: 24, fontWeight: "bold", color: "#557bfe", }}>
               Scan...
             </Text>
           </View>
@@ -188,7 +169,7 @@ export default function ScanVoucher() {
               alignItems: 'center'
             }}
           >
-            <Text style={{fontSize: 18, fontWeight: "normal", color: "#557bfe", }}>
+            <Text style={{ fontSize: 18, fontWeight: "normal", color: "#557bfe", }}>
               Align code in the middle
             </Text>
           </View>
@@ -204,7 +185,7 @@ const styles = StyleSheet.create({
     color: '#23ff00',
     fontWeight: 'bold',
     marginBottom: 15,
-    
+
   },
 
   codeBox: {
