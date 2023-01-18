@@ -1,13 +1,13 @@
 {
     "type": "service_account",
     "project_id": "igse-tool-db",
-    "private_key_id": "f5d091333a18f365c40ca5a2c870aa1f532a6275",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC14tmM+ziMmU+J\nSTaa6UgEIOI9H0OYCGOmnqckJD5hYkmPeqXcJa6RKbMcvYpAzBRwfOUjF1475sbN\nO0uJGfN/EymuxCp5sActg4xcetiJQarn91y/c7X+oGjfOcMrqRrLJtLh2E9bZ2jl\nJTS+In9EWjE6OifID3suOk1D6ToFTkWU/rdhbB0la2kkimgRInCIoDiQ+sY1Xfrh\nERtUGst/neq16ay3pmlCbMXXVRpt2xdI2T3WLLby8ZgPz4g/gPJlM9LU9TR98srY\nrNHjgUwKkVm1STggrknxtenH1ly4mTK/qgmrrIaZzBK45skgtWnpDU+C2YELeQDZ\nfs72/jc9AgMBAAECggEADmup6++PEDang672UVnlh85Doaz04vznSbKSdd8ZwwbT\n5jhHJikmqgOwW7r7Vx/XDwQX9qxHoGAvqt3koz4XfB+80kpjQ7qdFxKy8jIbMOav\n8iw+gj9eUo3NQsWFn9SMd0bguV85C3orat+ESv7ZMEYmWQN7W/U+QvAEaDn5i6oC\nUruV5M5BB7/4k2QpcMJ3lLMxeT1FEw5QQ2FWurq56CSzPhnIl/eM4dbIWOn4GVKf\n+XwGC5SkITsTIWCjTVlwBa6ZXhXCYowK9987tzQJR+hrd8z6QeW7XoKNtqXNa0Nw\nKtK4EpivCVriKTWLCMzfHDbRpmT+g/LcXsk3LVzhgQKBgQD+l2e9KezxMZ9UImgY\ncG2Yszin/irUSwk2QcC47GlPzp58kQwVoJJJntXHNzaHRPFqzey8AUezEBfdU2yW\n7bZl5VJKIJPt4akWt5Fy79ws1P7zqR3HjRVmvLkslzoQCURMR8ilVi9py1/o54wE\n83/TF8aRILadOJnGR6w2A7zj9QKBgQC25HeclkhLYrNugvwJnu/y37Z8DnCk19YV\nJHUiJ8T2U9mfRlFWXQh0UAvzA1S4cRrg5YqVjv9v/OdPTtMLbrmIZ4L8KBsYFfXf\nSvmxAwdwNa9mO9b9ilXR2jz5b4BPyRsveLk+O9TtaHC4TFf+yhXdURUvpDkdUrSl\nGxsGMxrBKQKBgFGs/xH3vlUOp1/VffHBN9fSP23do53hyL3IUGzDI3IABmZOHkNd\n9TB7LXgw5WR2IMEz+SvDeV4f3pgZqG+vKWH9NO4lD3A0gguQrq/h9Y/IcVZ4Pd6E\nC4afKwT8Kxtz7Z5PNTadtK5LGaTdi9UWzT5KlWB/zzYXL3YmDkBx6Ip1AoGBAKQK\nm/ZJHSLwrnvq5GFEu3eejLEMyqAwL4bbImy2OwWuA73GdmH+I/0fZvha/nxIhpE9\nkWW/0wEBV/9cdhMFB0h/f47n8hVSbSwQtZC9ZMiSfnY2KglTMNJ+6r3X8sCdYtLb\nd1uIkt02FhRX9X1EiQPvHA+VPt08N2b3vu96mv6xAoGABmLKBge1KHatn/xe2zvz\nOSVJnJVPsnDMqPpeh578g2KKFRTk+4SMVnx2rVgUwGYfK+d/iB3TECwAdSBqXVWx\nOwxTB+rLB5xAht+bRps8FhOb2kk4MFZafeTAt7pc5Be7z0so9EU3uxPuy2oKxyUg\nPomVRN32XjnzyzKNzHzbWiY=\n-----END PRIVATE KEY-----\n",
-    "client_email": "firebase-adminsdk-nj4zd@igse-tool-db.iam.gserviceaccount.com",
+    "private_key_id": "",
+    "private_key": "-----BEGIN PRIVATE KEY-----\n\n-----END PRIVATE KEY-----\n",
+    "client_email": "",
     "client_id": "113703449081498701762",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-nj4zd%40igse-tool-db.iam.gserviceaccount.com"
+    "client_x509_cert_url": ""
   }
   
